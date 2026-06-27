@@ -135,3 +135,26 @@ class POS_System:
         result = cursor.fetchone()
         conn.close()
         return result[0] if result else None
+    
+    def add_or_restock_product(self, barcode, name, price, stock_to_add):
+        """Adds a new product or increases stock if the barcode already exists"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        try:
+            # Try to inser, but if barcode exists, add to existing stock
+            cursor.execute('''
+                INSERT INTO products (barcode, name, price, stock)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(barcode) DO UPDATE SET
+                    stock = stock + excluded.stock,
+                    price = excluded.price, -- Updates to the latest price
+                    name = excluded.name
+            ''', (barcode, name, price, stock_to_add))
+
+            conn.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Database error: {e}")
+            return False
+        finally:
+            conn.close()

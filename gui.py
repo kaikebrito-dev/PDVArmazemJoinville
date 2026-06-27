@@ -2,7 +2,8 @@ import sys
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QLineEdit,
     QTableWidget, QTableWidgetItem, QPushButton, QLabel,
-    QHeaderView, QMessageBox, QSpinBox, QStackedWidget, QShortcut
+    QHeaderView, QMessageBox, QSpinBox, QStackedWidget, QShortcut, QDialog,
+    QFormLayout, QDoubleSpinBox
     )
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtCore import Qt
@@ -166,9 +167,16 @@ class POS_App(QMainWindow):
         header = QHBoxLayout()
         title = QLabel("Inventário e Gerenciamento de Estoque")
         title.setStyleSheet("font-size: 20px; font-weight: bold; color: #2c3e50;")
+
+        btn_add_prod = QPushButton("Novo / Restocar Produto")
+        btn_add_prod.setStyleSheet("background-color: #2ecc71; color: white; font-weight: bold; padding: 6px;")
+        btn_add_prod.clicked.connect(self.show_add_product_dialog)
+
         btn_back = QPushButton("Voltar ao Menu (ESC)")
         btn_back.clicked.connect(lambda: self.central_stacked.setCurrentIndex(0))
+
         header.addWidget(title)
+        header.addWidget(btn_add_prod)
         header.addWidget(btn_back, alignment=Qt.AlignRight)
         layout.addLayout(header)
 
@@ -190,6 +198,56 @@ class POS_App(QMainWindow):
             self.stock_table.setItem(row_idx, 2, QTableWidgetItem(name))
             self.stock_table.setItem(row_idx, 3, QTableWidgetItem(f"R${price:.2f}"))
             self.stock_table.setItem(row_idx, 4, QTableWidgetItem(str(stock)))
+
+    def show_add_product_dialog(self):
+        """Opens a dialog window to register or restock a product"""
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Gerenciar Estoque - Produto")
+        dialog.setMinimumWidth(350)
+
+        form_layout = QFormLayout(dialog)
+
+        barcode_input = QLineEdit()
+        name_input = QLineEdit()
+
+        price_input = QDoubleSpinBox()
+        price_input.setMaximum(9999.99)
+        price_input.setPrefix("R$")
+
+        stock_input = QSpinBox()
+        stock_input.setMaximum(9999)
+        stock_input.setValue(1)
+
+        form_layout.addRow("Código de Barras:", barcode_input)
+        form_layout.addRow("Nome do Produto:", name_input)
+        form_layout.addRow("Preço Unitário:", price_input)
+        form_layout.addRow("Quantidade a Adicionar:", stock_input)
+
+        btn_save = QPushButton("Salvar no Estoque")
+        btn_save.setStyleSheet("background-color: #34495e; color: white; font-weight: bold; padding: 8px;")
+        form_layout.addRow(btn_save)
+
+        # Inner function to execute the processing on click
+        def save_action():
+            barcode = barcode_input.text().strip()
+            name = name_input.text().strip()
+            price = price_input.value()
+            qty = stock_input.value()
+
+            if not barcode or not name:
+                QMessageBox.warning(dialog, "Erro", "Todos os campos obrigatórios devem ser preenchidos!")
+                return
+            
+            if self.pos.add_or_restock_product(barcode, name, price, qty):
+                QMessageBox.information(dialog, "Sucesso", "Estoque atualizado com sucesso!")
+                dialog.accept()
+                self.load_stock_inventory()
+                self.load_products()
+            else:
+                QMessageBox.critical(dialog, "Erro", "Não foi possível atualizar o banco de dados.")
+        
+        btn_save.clicked.connect(save_action)
+        dialog.exec_()
 
 # ================= 3. SALES REPORTS PAGE =================
     def create_reports_page(self):
