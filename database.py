@@ -19,7 +19,7 @@ def init_db():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS sales (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            timestamp DATETIME DEFAULT (datetime('now', 'localtime')),
             total_amount REAL NOT NULL
         )
     ''')

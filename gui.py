@@ -60,7 +60,7 @@ class POS_App(QMainWindow):
 
     def setup_shortcuts(self):
 # Confirm checkout
-        self.checkout_shortcut = QShortcut(QKeySequence(Qt.Key_Return), self)
+        self.checkout_shortcut = QShortcut(QKeySequence(Qt.Key_Space), self)
         self.checkout_shortcut.activated.connect(self.handle_shortcut_checkout)
 # Remove item
         self.remove_shortcut = QShortcut(QKeySequence(Qt.Key_Delete), self)
@@ -86,7 +86,7 @@ class POS_App(QMainWindow):
         left_title = QHBoxLayout()
         lbl = QLabel("Catálogo de Produtos")
         lbl.setStyleSheet("font-size: 18px; font-weight: bold;")
-        btn_back = QPushButton("Voltar ao Menu")
+        btn_back = QPushButton("Voltar ao Menu (ESC)")
         btn_back.clicked.connect(lambda: self.central_stacked.setCurrentIndex(0))
         left_title.addWidget(lbl)
         left_title.addWidget(btn_back, alignment=Qt.AlignRight)
@@ -135,7 +135,7 @@ class POS_App(QMainWindow):
         right_panel.addWidget(self.cart_table)
 
         # Remove Button
-        remove_btn = QPushButton("Remover o Item Selecionado")
+        remove_btn = QPushButton("Remover o Item Selecionado (DELETE)")
         remove_btn.setStyleSheet("background-color: #e67e22; color: white; font-weight: bold; padding: 6px;")
         remove_btn.clicked.connect(self.handle_remove_item)
         right_panel.addWidget(remove_btn)
@@ -146,7 +146,7 @@ class POS_App(QMainWindow):
         right_panel.addWidget(self.total_label, alignment=Qt.AlignRight)
 
         # Checkout Button
-        checkout_btn = QPushButton("Concluir Venda")
+        checkout_btn = QPushButton("Concluir Venda (ESPAÇO)")
         checkout_btn.setStyleSheet("background-color: #3498db; color: white; font-size: 16px; font-weight: bold; padding: 12px;")
         checkout_btn.clicked.connect(self.handle_checkout)
         right_panel.addWidget(checkout_btn)
@@ -166,13 +166,13 @@ class POS_App(QMainWindow):
         header = QHBoxLayout()
         title = QLabel("Inventário e Gerenciamento de Estoque")
         title.setStyleSheet("font-size: 20px; font-weight: bold; color: #2c3e50;")
-        btn_back = QPushButton("Voltar ao Menu")
+        btn_back = QPushButton("Voltar ao Menu (ESC)")
         btn_back.clicked.connect(lambda: self.central_stacked.setCurrentIndex(0))
         header.addWidget(title)
         header.addWidget(btn_back, alignment=Qt.AlignRight)
         layout.addLayout(header)
 
-        self.stock_table = QTableWidget(0, 4)
+        self.stock_table = QTableWidget(0, 5)
         self.stock_table.setHorizontalHeaderLabels(["ID", "Código de Barras", "Nome do Produto", "Preço", "Estoque Atual"])
         self.stock_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.stock_table.setEditTriggers(QTableWidget.NoEditTriggers)
@@ -199,7 +199,7 @@ class POS_App(QMainWindow):
         header = QHBoxLayout()
         title = QLabel("Relatório de Vendas")
         title.setStyleSheet("font-size: 20px; font-weight: bold; color: #2c3e50;")
-        btn_back = QPushButton("Voltar ao Menu")
+        btn_back = QPushButton("Voltar ao Menu (ESC)")
         btn_back.clicked.connect(lambda: self.central_stacked.setCurrentIndex(0))
         header.addWidget(title)
         header.addWidget(btn_back, alignment=Qt.AlignRight)
@@ -210,7 +210,7 @@ class POS_App(QMainWindow):
         layout.addWidget(self.revenue_label)
 
         self.report_table = QTableWidget(0, 3)
-        self.report_table.setHorizontalHeaderLabels(["ID da Compra", "Data", "Valor"])
+        self.report_table.setHorizontalHeaderLabels(["ID da Venda", "Data", "Valor"])
         self.report_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.report_table.setEditTriggers(QTableWidget.NoEditTriggers)
         layout.addWidget(self.report_table)
@@ -261,7 +261,6 @@ class POS_App(QMainWindow):
         p_id = int(self.prod_table.item(selected_row, 0).text())
         qty = self.qty_spin.value()
 
-        # Call your existing pos.py backend logic!
         success = self.pos.add_to_cart(p_id, qty)
         if success:
             self.update_cart_display()
@@ -307,10 +306,10 @@ class POS_App(QMainWindow):
                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         
         if reply == QMessageBox.Yes:
-            self.pos.checkout() # Existing database execution logic
+            self.pos.checkout()
             QMessageBox.information(self, "Sucesso", "Transação registrada com sucesso!")
-            self.update_cart_display() # Clear cart UI
-            self.load_products() # Refresh stock levels in product UI
+            self.update_cart_display()
+            self.load_products()
 
     def keyPressEvent(self, event):
         """Captures hardware barcode scans typed directly to the window."""
